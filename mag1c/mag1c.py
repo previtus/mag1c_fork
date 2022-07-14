@@ -120,8 +120,18 @@ def acrwl1mf(x: torch.Tensor,
     xmean = modx - mu
     C = torch.div(torch.bmm(torch.transpose(xmean, 1, 2), xmean), N)  # [b x s x p] * [b x p x s] = [b x s x s]
     C = C.lerp_(torch.diag_embed(torch.diagonal(C, dim1=-2, dim2=-1)), alpha)  # C = (1-alpha) * S + alpha * diag(S)
-    # Cit, _ = torch.gesv(torch.transpose(target, 1, 2), C)  # [b x s x 1] \ [b x s x s] = [b x s x 1]
+
+    # A.)
+    # Fails here with "cholesky: (Batch element 0): The factorization could not be completed because the input is not positive-definite"
     Cit = torch.cholesky_solve(torch.transpose(target, 1, 2), torch.cholesky(C, upper=False), upper=False)
+    # B.)
+    # Trying as alternative
+    # Cit, _ = torch.gesv(torch.transpose(target, 1, 2), C)  # [b x s x 1] \ [b x s x s] = [b x s x 1]    
+    # C.)
+    # Cit, _ = torch.solve(torch.transpose(target, 1, 2), C)  # [b x s x 1] \ [b x s x s] = [b x s x 1]
+
+
+    
     normalizer = torch.bmm(target, Cit)  # [b x 1 x s] * [b x s x 1] = [b x 1 x 1]
     mf = torch.div(torch.bmm(x - mu, Cit), torch.mul(R, normalizer))  # [b x p x s] * [b x s x 1] = [b x p x 1]
     if not zero_override:
@@ -139,7 +149,10 @@ def acrwl1mf(x: torch.Tensor,
         xmean = torch.add(modx, alpha=-1, other=mu, out=xmean)
         C = torch.div(torch.bmm(torch.transpose(xmean, 1, 2), xmean), other=torch.tensor(N), out=C)
         C = C.lerp_(torch.diag_embed(torch.diagonal(C, dim1=-2, dim2=-1)), alpha)
+        # A.)
         Cit = torch.cholesky_solve(torch.transpose(target, 1, 2), torch.cholesky(C, upper=False), upper=False)
+        # C.)
+        # Cit, _ = torch.solve(torch.transpose(target, 1, 2), C)
         # Compute matched filter with regularization
         normalizer = torch.bmm(target, Cit, out=normalizer)
         if torch.sum(torch.lt(normalizer, 1)):
@@ -786,7 +799,7 @@ def main():
     if args.out is not None:
         output_filename = f'{args.out}.hdr'
     else:
-        output_filename = os.path.basename(args.rdn)[:len('xxxYYYYMMDDtHHMMSS')] + '_ch4_cmfr'
+        output_filename = os.path.basename(args.rdn)[:len('xxxYYYYMMDDtHHMMSS')] + '_ch4_cmfr' + '.hdr'
     output_file = spectral.io.envi.create_image(output_filename, output_metadata, force=args.overwrite, ext='')
     output_memmap = output_file.open_memmap(interleave='bip', writable=True)
     qprint(f'Filter output will be written to {output_filename}')

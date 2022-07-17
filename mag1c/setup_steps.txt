@@ -20,4 +20,21 @@ pip install torch==1.3.1
 pip install mag1c torch==1.3.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
 
 mag1c 'data/ang20150419t155032_rdn_v1f/ang20150419t155032_rdn_v1f_img' --out "test_cpu_out"
+===> errors
+
+# From recommendation (test 3)
+## errors maybe caused by geo / nongeo files .... basically run the same command with "--geo"
+
+- For a file from https://avirisng.jpl.nasa.gov/benchmark_methane_carbon_dioxide.html / https://popo.jpl.nasa.gov/avng/AVNG_Benchmark_Methane_Carbon_Dioxide_Data/ang20160211t075004_rdn_v2m2.zip
+
+mag1c data_new/ang20160211t075004_rdn_v2m2/ang20160211t075004_rdn_v2m2_img --geo data_new/ang20160211t075004_rdn_v2m2/ang20160211t075004_rdn_v2m2_glt  --out data_new/ang20160211t075004_rdn_v2m2/output
+===> Runs and works! (75 sec, magic CPU version)
+
+- For the other tested files (with "v1f")
+mag1c data/ang20150419t155032_rdn_v1f/ang20150419t155032_rdn_v1f_img --geo data/ang20150419t155032_rdn_v1f/ang20150419t155032_rdn_v1f_glt  --out data/ang20150419t155032_rdn_v1f/output
+===> Slower, but runs! (752 sec = 12.5min, magic CPU version)
+
+
+- Other tested file marked with "v2m2" (ang20160211t075004_rdn_v2m2 - also mentioned in the paper)
+mag1c data/ang20160211t075004_rdn_v2m2/ang20160211t075004_rdn_v2m2_img --geo data/ang20160211t075004_rdn_v2m2/ang20160211t075004_rdn_v2m2_glt  --out data/ang20160211t075004_rdn_v2m2/output
 
